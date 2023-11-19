@@ -1,21 +1,9 @@
 const express = require("express");
-
+const router = express.Router();
 const { nanoid } = require("nanoid");
 const timeController = require("../controllers/TimeController");
-const HashController = require("../controllers/HashController");
-
-const DB = {
-  users: [
-    {
-      _id: nanoid(),
-      username: "admin",
-      password: HashController.hash("pwd007"),
-    },
-  ],
-  sessions: {},
-  timers: [],
-};
-const router = express.Router();
+const DB = require("../database/DB");
+const SessionController = require("../controllers/SessionController");
 
 for (let i = 0; i < DB.timers.length; i++) {
   const el = DB.timers[i];
@@ -24,16 +12,16 @@ for (let i = 0; i < DB.timers.length; i++) {
   }
 }
 
-router.get("/", (req, res) => {
-  const isActive = req.query.isActive === "true";
+router.get("/", async (req, res) => {
+  const isActive = (await req.query.isActive) === "true";
   const timers = DB.timers.filter((t) => t.isActive === isActive);
   res.json(timers);
 });
 
-router.post("/", async (req, res) => {
+router.post("/", SessionController.auth(), async (req, res) => {
   const { description } = req.body;
-  console.log(123);
   const newTimer = {
+    user_id: DB.users._id,
     start: Date.now(),
     description: description,
     isActive: true,
@@ -43,7 +31,7 @@ router.post("/", async (req, res) => {
 
   timeController.createTimerInterval(newTimer);
   DB.timers.push(newTimer);
-  await res.json(newTimer);
+  res.json(newTimer);
 });
 
 router.post("/:id/stop", async (req, res) => {
@@ -59,7 +47,7 @@ router.post("/:id/stop", async (req, res) => {
   const { start, end } = timer;
   timer.duration = end - start;
 
-  await res.status(204).json(DB);
+  res.status(204).json(DB);
 });
 
 module.exports = router;

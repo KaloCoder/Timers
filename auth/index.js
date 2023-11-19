@@ -1,9 +1,11 @@
 const express = require("express");
 const nunjucks = require("nunjucks");
 const cookieParser = require("cookie-parser");
+
 const logger = require("./middleware/logger");
 const timeRouter = require("./routes/timeRouter");
 const authRouter = require("./routes/authRouter");
+const SessionController = require("./controllers/SessionController");
 
 const app = express();
 
@@ -30,14 +32,14 @@ app.use(logger);
 app.use("/api/timers", timeRouter);
 app.use(authRouter);
 
-app.get("/", (req, res) => {
+app.get("/", SessionController.auth(), async (req, res) => {
   res.render("index", {
-    user: req.user,
+    user: await req.user,
     authError: req.query.authError === "true" ? "Wrong username or password" : req.query.authError,
   });
 });
 
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3001;
 
 app.listen(port, () => {
   console.log(`  Listening on http://localhost:${port}`);
