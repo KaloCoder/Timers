@@ -17,17 +17,22 @@ class SessionController {
   createSession = async (userId) => {
     const sessionId = nanoid();
     DB.sessions[sessionId] = userId;
-    DB.timers = [];
     return sessionId;
   };
 
   auth = () => async (req, res, next) => {
-    if (!req.cookies["sessionId"]) {
+    let sessionId = req.cookies["sessionId"];
+    if (!sessionId) {
+      if (req.method === "POST") {
+        return res.sendStatus(401);
+      }
       return next();
     }
-    const user = await this.findUserBySessionId(req.cookies["sessionId"]);
+    const user = await this.findUserBySessionId(sessionId);
+
     req.user = user;
-    req.sessionId = req.cookies["sessionId"];
+    req.sessionId = sessionId;
+
     next();
   };
 }

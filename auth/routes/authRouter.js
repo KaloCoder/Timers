@@ -15,6 +15,7 @@ router.post("/login", bodyParser.urlencoded({ extended: false }), async (req, re
     return res.redirect("/?authError=true");
   }
   const sessionId = await SessionController.createSession(user._id);
+
   res.cookie("sessionId", sessionId, { httpOnly: true }).redirect("/");
 });
 
@@ -33,6 +34,7 @@ router.post("/signup", bodyParser.urlencoded({ extended: false }), async (req, r
     };
     const sessionId = await SessionController.createSession(newUser._id);
     DB.users.push(newUser);
+
     res.cookie("sessionId", sessionId, { httpOnly: true }).redirect("/");
   }
 });
@@ -44,7 +46,5 @@ router.get("/logout", SessionController.auth(), async (req, res) => {
   await SessionController.deleteSession(req.sessionId);
   res.clearCookie("sessionId").redirect("/");
 });
-
-// router.get("/")
 
 module.exports = router;
